@@ -1,0 +1,4 @@
+export const SET_PRODUCTS = 'SET_PRODUCTS';
+export const SET_SEARCH_TEXT = 'SET_SEARCH_TEXT';
+export const SET_SELECTED_CATEGORY = 'SET_SELECTED_CATEGORY';
+export const SET_PRODUCT_DETAIL = 'SET_PRODUCT_DETAIL'; // Yeni action type

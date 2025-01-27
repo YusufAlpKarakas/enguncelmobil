@@ -1,0 +1,46 @@
+{
+  "products":[
+    {
+      "id": 1,
+      "name": "TYT Matematik Soru Bankası",
+      "category": "TYT",
+      "image": "kitap.png"
+    },
+    {
+      "id": 2,
+      "name": "AYT Edebiyat Soru Bankası",
+      "category": "AYT",
+      "image": "kitap.png"
+    },
+    {
+      "id": 3,
+      "name": "TYT Kimya Soru Bankası",
+      "category": "TYT",
+      "image": "kitap.png"
+    },
+    {
+      "id": 4,
+      "name": "AYT Felsefe Soru Bankası",
+      "category": "AYT",
+      "image": "kitap.png"
+    },
+    {
+      "id": 5,
+      "name": "TYT Fizik Soru Bankası",
+      "category": "TYT",
+      "image": "kitap.png"
+    },
+    {
+      "id": 6,
+      "name": "AYT Matematik Soru Bankası",
+      "category": "AYT",
+      "image": "kitap.png"
+    },
+    {
+        "id": 7,
+        "name": "AYT Geometri Soru Bankası",
+        "category": "AYT",
+        "image": "kitap.png"
+      }
+  ]
+}
