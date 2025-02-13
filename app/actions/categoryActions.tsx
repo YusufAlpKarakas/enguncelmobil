@@ -1,3 +1,5 @@
+/*
+
 export const setCategory = (category: string) => {
     return {
       type: 'SET_CATEGORY',
@@ -6,4 +8,4 @@ export const setCategory = (category: string) => {
   };
   
   export default setCategory; // Default export eklenmeli
-  
+  */

@@ -1,3 +1,4 @@
+/*
 const initialState = {
   selectedCategory: '',
 };
@@ -15,3 +16,4 @@ export const categoryReducer = (state = initialState, action: any) => {
 };
 
 export default categoryReducer; // Default export eklenmeli
+*/

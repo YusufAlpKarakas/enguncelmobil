@@ -1,3 +1,4 @@
+/*
 import { SET_PRODUCTS, SET_SEARCH_TEXT, SET_SELECTED_CATEGORY, SET_PRODUCT_DETAIL } from './types';
 
 // Action to set products
@@ -23,3 +24,28 @@ export const setProductDetail = (product) => ({
   type: SET_PRODUCT_DETAIL,
   payload: product,
 });
+*/
+
+import { SET_PRODUCTS, SET_SEARCH_TEXT, SET_SELECTED_CATEGORY, SET_PRODUCT_DETAIL } from './types';
+
+export const setProducts = (products: any[]) => ({
+  type: SET_PRODUCTS,
+  payload: products,
+});
+
+export const setSearchText = (text: string) => ({
+  type: SET_SEARCH_TEXT,
+  payload: text,
+});
+
+export const setSelectedCategory = (category: string) => ({
+  type: SET_SELECTED_CATEGORY,
+  payload: category,
+});
+
+export const setProductDetail = (productDetail: any) => ({
+  type: SET_PRODUCT_DETAIL,
+  payload: productDetail,
+});
+
+

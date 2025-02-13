@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../actions/userActions'; // Redux action'ı içe aktar
 
-export default function Login({ navigation }) {
+export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   const handleLogin = () => {
     fetch('http://192.168.56.1:3000/login', {
@@ -13,19 +18,30 @@ export default function Login({ navigation }) {
       body: JSON.stringify({ username, password }),
     })
       .then((response) => response.json())
-      .then((data) => {
+      .then(async (data) => {
         if (data.message === 'Giriş başarılı!') {
-          AsyncStorage.setItem('userToken', data.token);
-          AsyncStorage.setItem('username', username); // username verisini AsyncStorage'a kaydediyoruz
-
-          Alert.alert('Başarı', 'Giriş başarılı!');
-          // Burada doğrudan yönlendirme yapmıyoruz, sadece AsyncStorage'da veriyi kaydediyoruz.
+          await AsyncStorage.setItem('userToken', data.token);
+          await AsyncStorage.setItem('username', username);
+  
+          dispatch(setUser(username)); // Redux'a kullanıcıyı ekle
+  
+          Alert.alert('Başarı', 'Giriş başarılı!', [
+            { 
+              text: 'Tamam', 
+              onPress: () => {
+                setUsername('');
+                setPassword('');
+                navigation.navigate('index');
+              } 
+            }
+          ]);
         } else {
           Alert.alert('Hata', data.message || 'Bilinmeyen hata');
         }
       })
       .catch((error) => console.error(error));
   };
+  
 
   return (
     <View style={styles.container}>
@@ -49,6 +65,7 @@ export default function Login({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#f5f5f5' },

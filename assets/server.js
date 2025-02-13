@@ -112,7 +112,7 @@ app.post('/add-product', (req, res) => {
   });
 });
 
-// Favori ürünü ekleme endpoint'i
+// Favori ürünü ekleme
 app.post('/add-favorite', (req, res) => {
   const { productId } = req.body;
   const token = req.headers['authorization']?.split(' ')[1];
@@ -131,17 +131,34 @@ app.post('/add-favorite', (req, res) => {
     }
 
     const userId = decoded.userId;
-    const query = 'INSERT INTO favorites (user_id, product_id) VALUES (?, ?)';
-    connection.query(query, [userId, productId], (err, result) => {
+    // Favori ürün zaten mevcut mu kontrol et
+    const checkQuery = 'SELECT * FROM favorites WHERE user_id = ? AND product_id = ?';
+    connection.query(checkQuery, [userId, productId], (err, result) => {
       if (err) {
-        return res.status(500).send('Veritabanına veri eklenirken hata oluştu.');
+        return res.status(500).send('Veritabanı hatası.');
       }
-      res.status(200).send('Favoriye başarıyla eklendi!');
+
+      // Eğer zaten favorideyse
+      if (result.length > 0) {
+        return res.status(200).send('Bu ürün zaten favorilere eklenmiş.');
+      }
+
+      // Favoriyi ekle
+      const query = 'INSERT INTO favorites (user_id, product_id) VALUES (?, ?)';
+      connection.query(query, [userId, productId], (err, result) => {
+        if (err) {
+          return res.status(500).send('Favori eklerken hata oluştu.');
+        }
+        res.status(200).send('Favori başarıyla eklendi!');
+      });
     });
   });
 });
 
-// Kullanıcıya ait favori ürünleri listeleme endpoint'i
+
+
+
+// Kullanıcının favori ürünlerini getirme
 app.get('/get-favorites', (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
 
@@ -160,14 +177,55 @@ app.get('/get-favorites', (req, res) => {
       JOIN favorites f ON p.id = f.product_id
       WHERE f.user_id = ?
     `;
+    
     connection.query(query, [userId], (err, results) => {
       if (err) {
-        return res.status(500).send('Veritabanı hatası.');
+        return res.status(500).send('Favori ürünleri çekerken hata oluştu.');
       }
       res.status(200).json(results);
     });
   });
 });
+
+// Favori ürünü kaldırma
+app.delete('/remove-favorite/:id', (req, res) => {
+  const productId = req.params.id;  // Ürün ID'si URL parametresinden alınır
+  const token = req.headers['authorization']?.split(' ')[1];  // Authorization başlığından token alınır
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Token bulunamadı.' });
+  }
+
+  // Token doğrulama işlemi
+  jwt.verify(token, 'secret_key', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ success: false, error: 'Geçersiz token.' });
+    }
+
+    const userId = decoded.userId; // Kullanıcı ID'si token'dan alınır
+
+    // Favori ürünü veritabanından silme sorgusu
+    const query = 'DELETE FROM favorites WHERE user_id = ? AND product_id = ?';
+    
+    connection.query(query, [userId, productId], (err, result) => {
+      if (err) {
+        console.error('Veritabanı hatası:', err); // Detaylı hata loglaması
+        return res.status(500).json({ success: false, error: 'Favori kaldırılırken hata oluştu.' });
+      }
+
+      // Eğer herhangi bir satır silinmediyse (yani ürün favorilerde yok)
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, error: 'Bu ürün favorilerde yok.' });
+      }
+
+      res.status(200).json({ success: true, message: 'Favori başarıyla kaldırıldı!' });
+    });
+  });
+});
+
+
+
+
 
 
 // Sunucuyu başlat

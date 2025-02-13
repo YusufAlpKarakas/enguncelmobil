@@ -1,3 +1,4 @@
+/*
 import React, { useState, useEffect } from 'react';
 import {
   StatusBar,
@@ -111,7 +112,7 @@ export default function Kutuphane() {
           </View>
         </View>
 
-        {/* Arama ve Kategori */}
+        // Arama ve Kategori
         <View style={styles.searchCategoryContainer}>
           <Icon name="search" size={20} color="grey" style={styles.icon3} />
           <View style={styles.categoryContainer}>
@@ -154,12 +155,12 @@ export default function Kutuphane() {
           />
         </View>
 
-        {/* Kategori Başlığı */}
+        // Kategori Başlığı
         {selectedCategory && (
           <Text style={styles.categoryTitle}>{`Seçilen Kategori: ${selectedCategory}`}</Text>
         )}
 
-        {/* Yükleniyor Durumu */}
+        // Yükleniyor Durumu
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : filteredProducts.length === 0 ? (
@@ -287,3 +288,322 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+*/
+
+
+
+import React, { useState, useEffect } from 'react';
+import {
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Image,
+  TextInput,
+  ScrollView,
+  Button,
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon2 from 'react-native-vector-icons/MaterialIcons';
+
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { debounce } from 'lodash';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { addFavorite } from '../actions/favoriteActions';
+import { addToSepet } from '../actions/sepetActions';
+
+type Product = {
+  id: number;
+  name: string;
+  category: string;
+  image: string;
+};
+
+type RootStackParamList = {
+  UrunDetay: { product: Product };
+};
+
+export type NavigationProp = StackNavigationProp<RootStackParamList, 'UrunDetay'>;
+
+const { width } = Dimensions.get('window');
+
+export default function Kutuphane() {
+  const navigation = useNavigation<NavigationProp>();
+  const [text, setText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categoriesVisible, setCategoriesVisible] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    fetch('http://192.168.56.1:3000/get-products')
+      .then((response) => response.json())
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Ürünler alınırken bir hata oluştu:', error);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSearch = debounce((value: string) => {
+    setText(value);
+  }, 300);
+
+  const handleAddFavorite = async (product: Product) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        Alert.alert('Uyarı', 'Lütfen önce giriş yapın.');
+        return;
+      }
+  
+      const response = await fetch('http://192.168.56.1:3000/add-favorite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+        }),
+      });
+  
+      // Yanıtın Content-Type'ını kontrol edelim
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();  // Yanıt metni olarak alın
+        Alert.alert('Hata', 'Beklenmeyen yanıt formatı: ' + text);
+        return;
+      }
+  
+      // JSON parse işlemi
+      const data = await response.json();
+  
+      if (response.status === 200) {
+        Alert.alert('Başarılı', 'Ürün favorilere eklendi!');
+      } else {
+        Alert.alert('Hata', data.message || 'Bir hata oluştu.');
+      }
+    } catch (error) {
+      console.error('Favorilere eklerken hata:', error);
+      Alert.alert('Hata', 'Favori eklenirken bir hata oluştu.');
+    }
+  };
+  const handleAddToSepet = (product: Product) => {
+    dispatch(addToSepet(product));
+    Alert.alert('Başarılı', 'Ürün sepete eklendi!');
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const matchesText = product.name.toLowerCase().includes(text.toLowerCase());
+    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    return matchesText && matchesCategory;
+  });
+
+  return (
+    <ScrollView>
+      <SafeAreaView style={styles.container}>
+        <StatusBar translucent={true} backgroundColor="#333" barStyle="light-content" />
+        <View style={styles.topMenu}>
+          <View style={styles.topMenuRightBox}>
+            <Icon
+              name="heart"
+              size={25}
+              color="#000"
+              style={styles.icon1}
+              onPress={() => navigation.navigate('FavoriUrun')}
+            />
+            <Text>Favori Ürünler</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Sepet')}>
+                <Icon name="shopping-cart" size={25} color="#000" style={styles.icon1} />
+              </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.searchCategoryContainer}>
+          <Icon name="search" size={20} color="grey" style={styles.icon3} />
+          <View style={styles.categoryContainer}>
+            <Icon2
+              style={styles.icon4}
+              name="filter-list"
+              size={30}
+              color="black"
+              onPress={() => setCategoriesVisible(!categoriesVisible)}
+            />
+            {categoriesVisible && (
+              <View style={styles.categoryList}>
+                <Button
+                  title="TYT"
+                  onPress={() => {
+                    setSelectedCategory('TYT');
+                    setCategoriesVisible(false);
+                  }}
+                />
+                <Button
+                  title="AYT"
+                  onPress={() => {
+                    setSelectedCategory('AYT');
+                    setCategoriesVisible(false);
+                  }}
+                />
+              </View>
+            )}
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Arama"
+            onChangeText={handleSearch}
+          />
+        </View>
+
+        {selectedCategory && (
+          <Text style={styles.categoryTitle}>Seçilen Kategori: {selectedCategory}</Text>
+        )}
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : filteredProducts.length === 0 ? (
+          <Text style={styles.noResultText}>Hiç ürün bulunamadı.</Text>
+        ) : (
+          <View style={styles.productContainer}>
+            {filteredProducts.map((product) => (
+              <TouchableOpacity
+                key={product.id}
+                style={styles.productItem}
+                onPress={() => navigation.navigate('UrunDetay', { product })}
+              >
+                <Image
+                  style={styles.urunImage}
+                  source={require('../../assets/images/kitap.png')}
+                />
+                <Text>{product.name}</Text>
+                <Text>{product.price}</Text>
+                <TouchableOpacity onPress={() => handleAddFavorite(product)}>
+                  <Text style={styles.favoriteButton}>Favorilere Ekle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleAddToSepet(product)}>
+                  <Text style={styles.cartButton}>Sepete Ekle</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </SafeAreaView>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 20,
+  },
+  topMenu: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+  },
+  text: {
+    fontSize: 20,
+    color: '#000',
+  },
+  topMenuRightBox: {
+    flexDirection: 'row',
+  },
+  icon1: {
+    marginRight: 15,
+  },
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  icon2: {
+    marginRight: 15,
+  },
+  icon3: {
+    position: 'absolute',
+    left: 40,
+  },
+  icon4: {
+    position: 'absolute',
+    left: -30,
+  },
+  categoryList: {
+    position: 'absolute',
+    top: 40,
+    backgroundColor: '#fff',
+    elevation: 5,
+    zIndex: 10,
+    width: 200,
+    height: 200,
+    left: 100,
+  },
+  input: {
+    borderColor: '#333',
+    borderWidth: 1,
+    borderRadius: 5,
+    width: '90%',
+    paddingHorizontal: 40,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 10,
+    marginLeft: 10,
+  },
+  productContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  productItem: {
+    width: width * 0.4, // Dinamik genişlik
+    margin: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  urunImage: {
+    width: 150,
+    height: 150,
+    marginBottom: 10,
+    objectFit: 'contain',
+  },
+  noResultText: {
+    fontSize: 18,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  searchCategoryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+}); 
+
+

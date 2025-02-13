@@ -1,4 +1,8 @@
-export const initialProductState: Product[] = [];
-export const initialCategoryState: string = '';
-
-export default { initialProductState, initialCategoryState }; // Default export kullanılmalı
+/*
+const initialState = {
+  products: [],
+  searchText: '',
+  selectedCategory: '',
+  productDetail: null,
+};
+*/
